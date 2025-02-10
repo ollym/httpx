@@ -80,8 +80,10 @@ module HTTPX
          !connection.io &&
          connection.options.ip_families.size > 1 &&
          family == Socket::AF_INET &&
+         connection.state != :closed &&
          addresses.first.to_s != connection.peer.host.to_s
         log { "resolver #{FAMILY_TYPES[RECORD_TYPES[family]]}: applying resolution delay..." }
+
         @current_selector.after(0.05) do
           unless connection.state == :closed ||
                  # double emission check
