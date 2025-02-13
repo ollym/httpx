@@ -49,7 +49,16 @@ module ResponseHelpers
 
   def verify_uploaded(body, type, expect)
     assert body.key?(type), "there is no #{type} available"
-    assert body[type] == expect, "#{type} is unexpected: #{body[type]} (expected: #{expect})"
+
+    expect = expect.open(File::RDONLY) if expect.is_a?(Pathname)
+    if expect.respond_to?(:path) && expect.respond_to?(:read)
+      expect.rewind
+      base64_expect = "data:application/octet-stream;base64,#{Base64.strict_encode64(expect.read)}"
+      assert body[type] == base64_expect,
+             "#{type} is unexpected: #{body[type].size} bytes (expected: #{base64_expect.size} bytes)"
+    else
+      assert body[type] == expect, "#{type} is unexpected: #{body[type]} (expected: #{expect})"
+    end
   end
 
   def verify_error_response(response, expectation = nil)
